@@ -8,4 +8,4 @@ setup(name = "scilifelab_parsers",
     author = "Maya Brandi",
     author_email = "maya.brandi@scilifelab.se",
     description = "Package for scilife parser modules",
-    py_modules = ['flowcell_run_metrics_parser'])
+    py_modules = ['qc_parsers'])
