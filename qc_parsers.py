@@ -67,7 +67,7 @@ class MetricsParser():
         timestamp = []
         for line in in_handle:
             try:
-                ts = "{}Z".format(datetime.datetime.strptime(line.strip(), TIMEFORMAT).isoformat())
+                ts = "{0}Z".format(datetime.datetime.strptime(line.strip(), TIMEFORMAT).isoformat())
                 timestamp.append(ts)
             except ValueError:
                 pass
@@ -146,7 +146,7 @@ class DemultiplexConfigParser():
     def parse(self):
 
         if not os.path.exists(self.cfgfile):
-            self.log.warn("No such file {}".format(self.cfgfile))
+            self.log.warn("No such file {0}".format(self.cfgfile))
             return {}
         try:
             with open(self.cfgfile) as fh:
@@ -154,7 +154,7 @@ class DemultiplexConfigParser():
                 root = tree.getroot()
                 self.data = XmlToDict(root)
         except:
-            self.log.warn("Reading file {} failed".format(self.cfgfile))
+            self.log.warn("Reading file {0} failed".format(self.cfgfile))
             return {}
 
         return self.data
@@ -435,9 +435,9 @@ class FlowcellRunMetricsParser(RunMetricsParser):
 
     def parseRunInfo(self, fn="RunInfo.xml", **kw):
         infile = os.path.join(os.path.abspath(self.path), fn)
-        self.log.debug("parseRunInfo: going to read {}".format(infile))
+        self.log.debug("parseRunInfo: going to read {0}".format(infile))
         if not os.path.exists(infile):
-            self.log.warn("No such file {}".format(infile))
+            self.log.warn("No such file {0}".format(infile))
             return {}
         try:
             fp = open(infile)
@@ -446,7 +446,7 @@ class FlowcellRunMetricsParser(RunMetricsParser):
             fp.close()
             return data
         except:
-            self.log.warn("Reading file {} failed".format(os.path.join(os.path.abspath(self.path), fn)))
+            self.log.warn("Reading file {0} failed".format(os.path.join(os.path.abspath(self.path), fn)))
             return {}
 
     def parseRunParameters(self, fn="runParameters.xml", **kw):
@@ -458,9 +458,9 @@ class FlowcellRunMetricsParser(RunMetricsParser):
         :returns: parsed data structure
         """
         infile = os.path.join(os.path.abspath(self.path), fn)
-        self.log.debug("parseRunParameters: going to read {}".format(infile))
+        self.log.debug("parseRunParameters: going to read {0}".format(infile))
         if not os.path.exists(infile):
-            self.log.warn("No such files {}".format(infile))
+            self.log.warn("No such files {0}".format(infile))
             return {}
         try:
             with open(infile) as fh:
@@ -468,7 +468,7 @@ class FlowcellRunMetricsParser(RunMetricsParser):
                 data = parser.parse(fh)
             return data
         except:
-            self.log.warn("Reading file {} failed".format(os.path.join(os.path.abspath(self.path), fn)))
+            self.log.warn("Reading file {0} failed".format(os.path.join(os.path.abspath(self.path), fn)))
             return {}
 
     def parseDemultiplexConfig(self, fn="DemultiplexConfig.xml", **kw):
@@ -484,9 +484,9 @@ class FlowcellRunMetricsParser(RunMetricsParser):
 
     def parse_samplesheet_csv(self, runinfo_csv="SampleSheet.csv", **kw):
         infile = os.path.join(os.path.abspath(self.path), runinfo_csv)
-        self.log.debug("parse_samplesheet_csv: going to read {}".format(infile))
+        self.log.debug("parse_samplesheet_csv: going to read {0}".format(infile))
         if not os.path.exists(infile):
-            self.log.warn("No such file {}".format(infile))
+            self.log.warn("No such file {0}".format(infile))
             return {}
         try:
             fp = open(infile)
@@ -494,14 +494,14 @@ class FlowcellRunMetricsParser(RunMetricsParser):
             fp.close()
             return runinfo
         except:
-            self.log.warn("Reading file {} failed".format(infile))
+            self.log.warn("Reading file {0} failed".format(infile))
             return {}
 
     def parse_run_info_yaml(self, run_info_yaml="run_info.yaml", **kw):
         infile = os.path.join(os.path.abspath(self.path), run_info_yaml)
-        self.log.debug("parse_run_info_yaml: going to read {}".format(infile))
+        self.log.debug("parse_run_info_yaml: going to read {0}".format(infile))
         if not os.path.exists(infile):
-            self.log.warn("No such file {}".format(infile))
+            self.log.warn("No such file {0}".format(infile))
             return {}
         try:
             fp = open(infile)
@@ -510,7 +510,7 @@ class FlowcellRunMetricsParser(RunMetricsParser):
             return runinfo
             return True
         except:
-            self.log.warn("No such file {}".format(infile))
+            self.log.warn("No such file {0}".format(infile))
             return False
 
     def parse_illumina_metrics(self, fullRTA=False, **kw):
@@ -520,7 +520,7 @@ class FlowcellRunMetricsParser(RunMetricsParser):
             for f in files:
                 if f.endswith(".xml"):
                     fn.append(os.path.join(root, f))
-        self.log.debug("Found {} RTA files {}...".format(len(fn), ",".join(fn[0:10])))
+        self.log.debug("Found {0} RTA files {1}...".format(len(fn), ",".join(fn[0:10])))
         parser = IlluminaXMLParser()
         metrics = parser.parse(fn, fullRTA)
         def filter_function(f):
@@ -533,13 +533,13 @@ class FlowcellRunMetricsParser(RunMetricsParser):
 
     def parse_filter_metrics(self, fc_name, **kw):
         """pre-CASAVA: Parse filter metrics at flowcell level"""
-        self.log.debug("parse_filter_metrics for flowcell {}".format(fc_name))
+        self.log.debug("parse_filter_metrics for flowcell {0}".format(fc_name))
         lanes = dict([(str(k),{}) for k in self._lanes])
         for lane in self._lanes:
-            pattern = "{}_[0-9]+_[0-9A-Za-z]+(_nophix)?.filter_metrics".format(lane)
+            pattern = "{0}_[0-9]+_[0-9A-Za-z]+(_nophix)?.filter_metrics".format(lane)
             lanes[str(lane)]["filter_metrics"] = {"reads":None, "reads_aligned":None, "reads_fail_align":None}
             files = self.filter_files(pattern)
-            self.log.debug("filter metrics files {}".format(",".join(files)))
+            self.log.debug("filter metrics files {0}".format(",".join(files)))
             try:
                 fp = open(files[0])
                 parser = MetricsParser()
@@ -547,15 +547,15 @@ class FlowcellRunMetricsParser(RunMetricsParser):
                 fp.close()
                 lanes[str(lane)]["filter_metrics"] = data
             except:
-                self.log.warn("No filter nophix metrics for lane {}".format(lane))
+                self.log.warn("No filter nophix metrics for lane {0}".format(lane))
         return lanes
 
     def parse_bc_metrics(self, fc_name, **kw):
         """Parse bc metrics at sample level"""
-        self.log.debug("parse_bc_metrics for flowcell {}".format(fc_name))
+        self.log.debug("parse_bc_metrics for flowcell {0}".format(fc_name))
         lanes = dict([(str(k),{}) for k in self._lanes])
         for lane in self._lanes:
-            pattern = "{}_[0-9]+_[0-9A-Za-z]+(_nophix)?[\._]bc[\._]metrics".format(lane)
+            pattern = "{0}_[0-9]+_[0-9A-Za-z]+(_nophix)?[\._]bc[\._]metrics".format(lane)
             lanes[str(lane)]["bc_metrics"] = {}
             files = self.filter_files(pattern)
             self.log.debug("bc metrics files {}".format(",".join(files)))
@@ -566,7 +566,7 @@ class FlowcellRunMetricsParser(RunMetricsParser):
                 fp.close()
                 lanes[str(lane)]["bc_metrics"] = data
             except:
-                self.log.warn("No bc_metrics info for lane {}".format(lane))
+                self.log.warn("No bc_metrics info for lane {0}".format(lane))
         return lanes
 
     def parse_undemultiplexed_barcode_metrics(self, fc_name, **kw):
@@ -574,12 +574,12 @@ class FlowcellRunMetricsParser(RunMetricsParser):
         """
 
         # Use a glob to allow for multiple fastq folders
-        metrics_file_pattern = os.path.join(self.path, "Unaligned*", "Basecall_Stats_*{}".format(fc_name[1:]), "Undemultiplexed_stats.metrics")
+        metrics_file_pattern = os.path.join(self.path, "Unaligned*", "Basecall_Stats_*{0}".format(fc_name[1:]), "Undemultiplexed_stats.metrics")
         metrics = {'undemultiplexed_barcodes': []}
         for metrics_file in glob.glob(metrics_file_pattern):
-            self.log.debug("parsing {}".format(metrics_file))
+            self.log.debug("parsing {0}".format(metrics_file))
             if not os.path.exists(metrics_file):
-                self.log.warn("No such file {}".format(metrics_file))
+                self.log.warn("No such file {0}".format(metrics_file))
                 continue
 
             with open(metrics_file) as fh:
@@ -593,7 +593,7 @@ class FlowcellRunMetricsParser(RunMetricsParser):
 
         # Define a function for sorting values according to lane and yield
         def by_lane_yield(data):
-            return '{}-{}'.format(data.get('lane',''),data.get('count','').zfill(10))
+            return '{0}-{1}'.format(data.get('lane',''),data.get('count','').zfill(10))
 
         # Remove duplicate entries resulting from multiple stats files
         for metric in ['undemultiplexed_barcodes']:
@@ -603,7 +603,7 @@ class FlowcellRunMetricsParser(RunMetricsParser):
                 if key not in dedupped:
                     dedupped[key] = row
                 else:
-                    self.log.warn("Duplicates of Undemultiplexed barcode entries discarded: {}".format(key[0:min(35,len(key))]))
+                    self.log.warn("Duplicates of Undemultiplexed barcode entries discarded: {0}".format(key[0:min(35,len(key))]))
 
             # Reformat the structure of the data to fit the downstream processing
             lanes = {}
@@ -624,12 +624,12 @@ class FlowcellRunMetricsParser(RunMetricsParser):
                    "Sample_information": []}
         # Use a glob to allow for multiple fastq directories
         print fc_name[1:]
-        print "Basecall_Stats_*{}".format(fc_name[1:])
-        htm_file_pattern = os.path.join(self.path, "Unaligned*", "Basecall_Stats_*{}".format(fc_name[1:]), "Demultiplex_Stats.htm")
+        print "Basecall_Stats_*{0}".format(fc_name[1:])
+        htm_file_pattern = os.path.join(self.path, "Unaligned*", "Basecall_Stats_*{0}".format(fc_name[1:]), "Demultiplex_Stats.htm")
         for htm_file in glob.glob(htm_file_pattern):
-            self.log.debug("parsing {}".format(htm_file))
+            self.log.debug("parsing {0}".format(htm_file))
             if not os.path.exists(htm_file):
-                self.log.warn("No such file {}".format(htm_file))
+                self.log.warn("No such file {0}".format(htm_file))
                 continue
             with open(htm_file) as fh:
                 htm_doc = fh.read()
@@ -651,14 +651,14 @@ class FlowcellRunMetricsParser(RunMetricsParser):
             smp_header_known = ['None', 'Recipe', 'Operator', 'Directory']
             if not bc_header == bc_header_known:
                 self.log.warn("Barcode lane statistics header information has"
-                        " changed. New format?\nOld format: {}\nSaw: {}".format(
-                        ",".join((["'{}'".format(x) for x in bc_header_known])),
-                        ",".join(["'{}'".format(x) for x in bc_header])))
+                        " changed. New format?\nOld format: {0}\nSaw: {1}".format(
+                        ",".join((["'{0}'".format(x) for x in bc_header_known])),
+                        ",".join(["'{0}'".format(x) for x in bc_header])))
             if not smp_header == smp_header_known:
                 self.log.warn("Sample header information has changed. New "
-                        "format?\nOld format: {}\nSaw: {}".format(
-                        ",".join((["'{}'".format(x) for x in smp_header_known])),
-                        ",".join(["'{}'".format(x) for x in smp_header])))
+                        "format?\nOld format: {0}\nSaw: {1}".format(
+                        ",".join((["'{0}'".format(x) for x in smp_header_known])),
+                        ",".join(["'{0}'".format(x) for x in smp_header])))
             ## Fix first header name in smp_header since htm document is mal-formatted: <th>Sample<p></p>ID</th>
             smp_header[0] = "Sample ID"
 
@@ -680,7 +680,7 @@ class FlowcellRunMetricsParser(RunMetricsParser):
 
         # Define a function for sorting the values
         def by_lane_sample(data):
-            return "{}-{}-{}".format(data.get('Lane',''),data.get('Sample ID',''),data.get('Index',''))
+            return "{0}-{1}-{2}".format(data.get('Lane',''),data.get('Sample ID',''),data.get('Index',''))
 
         # Post-process the metrics data to eliminate duplicates resulting from multiple stats files
         for metric in ['Barcode_lane_statistics', 'Sample_information']:
@@ -690,7 +690,7 @@ class FlowcellRunMetricsParser(RunMetricsParser):
                 if key not in dedupped:
                     dedupped[key] = row
                 else:
-                    self.log.debug("Duplicates of Demultiplex Stats entries discarded: {}".format(key[0:min(35,len(key))]))
+                    self.log.debug("Duplicates of Demultiplex Stats entries discarded: {0}".format(key[0:min(35,len(key))]))
             metrics[metric] = sorted(dedupped.values(), key=by_lane_sample)
 
         ## Set data
