@@ -206,7 +206,7 @@ class FlowcellRunMetricsParser(RunMetricsParser):
             for row in sorted(dedupped.values(), key=by_lane_yield, reverse=True):
                 lane = row['lane']
                 if lane not in lanes:
-                    lanes[lane] = {metric: {k:[] for k in row.keys()}}
+                    lanes[lane] = {metric: dict([(k,[]) for k in row.keys()])}
                 for k in row.keys():
                     lanes[lane][metric][k].append(row[k])
 
