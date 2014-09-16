@@ -623,6 +623,8 @@ class FlowcellRunMetricsParser(RunMetricsParser):
         metrics = {"Barcode_lane_statistics": [],
                    "Sample_information": []}
         # Use a glob to allow for multiple fastq directories
+        print fc_name[1:]
+        print "Basecall_Stats_*{}".format(fc_name[1:])
         htm_file_pattern = os.path.join(self.path, "Unaligned*", "Basecall_Stats_*{}".format(fc_name[1:]), "Demultiplex_Stats.htm")
         for htm_file in glob.glob(htm_file_pattern):
             self.log.debug("parsing {}".format(htm_file))
