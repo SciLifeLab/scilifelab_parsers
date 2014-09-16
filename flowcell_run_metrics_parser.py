@@ -264,8 +264,7 @@ class FlowcellRunMetricsParser(RunMetricsParser):
             table = soup.findAll("table")[1]
             rows = table.findAll("tr")
             column_gen = (row.findAll("td") for row in rows)
-            for i in range(0, len(bc_header)) if row}:
-                parse_row = lambda row: {bc_header[i]:str(row[i].string) 
+            parse_row = lambda row: {bc_header[i]:str(row[i].string) for i in range(0, len(bc_header)) if row}
             metrics["Barcode_lane_statistics"].extend(map(parse_row, column_gen))
 
             ## Parse Sample information
@@ -273,8 +272,7 @@ class FlowcellRunMetricsParser(RunMetricsParser):
             table = soup.findAll("table")[3]
             rows = table.findAll("tr")
             column_gen = (row.findAll("td") for row in rows)
-            for i in range(0, len(smp_header)) if row}:
-                parse_row = lambda row: {smp_header[i]:str(row[i].string)
+            parse_row = lambda row: {smp_header[i]:str(row[i].string) for i in range(0, len(smp_header)) if row}
             metrics["Sample_information"].extend(map(parse_row, column_gen))
 
         # Define a function for sorting the values
