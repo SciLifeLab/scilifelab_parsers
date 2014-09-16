@@ -9,7 +9,8 @@ import numpy as np
 import csv
 import collections
 #import xml.etree.cElementTree as ET
-from bs4 import BeautifulSoup
+#from bs4 import BeautifulSoup
+import BeautifulSoup
 import datetime
 
 #from scilifelab.log import minimal_logger
