@@ -697,7 +697,7 @@ class SampleRunMetricsParser(RunMetricsParser):
         self.log.debug("get_bc_count for sample {}, project {} in flowcell {}".format(barcode_name, sample_prj, flowcell))
         # If demultiplex_stats passed use this info instead
         if demultiplex_stats:
-            demux_stats_dict = {"{}_{}".format(l.get('Sample ID', None), l.get('Lane', None)):l for l in demultiplex_stats.get('Barcode_lane_statistics', [])}
+            demux_stats_dict = dict([("{}_{}".format(l.get('Sample ID', None), l.get('Lane', None)),l) for l in demultiplex_stats.get('Barcode_lane_statistics', [])])
             sample_lane = "{}_{}".format(barcode_name, lane)
             if sample_lane in demux_stats_dict:
                 self.log.debug("sample {}, lane {} found in demultiplex_stats - using this information".format(barcode_name, lane))
