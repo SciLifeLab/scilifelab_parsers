@@ -12,9 +12,8 @@ import collections
 import xml.etree.cElementTree as ET
 from bs4 import BeautifulSoup
 import datetime
+import logging as LOG
 
-from scilifelab.log import minimal_logger
-LOG = minimal_logger("bcbio")
 
 from bcbio.broad.metrics import PicardMetricsParser
 from bcbio.pipeline.qcsummary import FastQCParser
