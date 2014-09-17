@@ -611,6 +611,7 @@ class FlowcellRunMetricsParser(RunMetricsParser):
         """Parse the Demultiplex_Stats.htm file
         generated from CASAVA demultiplexing and returns barcode metrics.
         """
+        metrics = {"Barcode_lane_statistics": [], "Sample_information": []}
         self.log.debug("parsing {0}".format(htm_file))
         with open(htm_file) as fh:
             htm_doc = fh.read()
