@@ -569,114 +569,95 @@ class FlowcellRunMetricsParser(RunMetricsParser):
                 self.log.warn("No bc_metrics info for lane {0}".format(lane))
         return lanes
 
-    def parse_undemultiplexed_barcode_metrics(self, fc_name, **kw):
+    def parse_undemultiplexed_barcode_metrics(self, metrics_file, **kw):
         """Parse the undetermined indices top barcodes materics
         """
-
-        # Use a glob to allow for multiple fastq folders
-        metrics_file_pattern = os.path.join(self.path, "Unaligned*", "Basecall_Stats_*{0}".format(fc_name[1:]), "Undemultiplexed_stats.metrics")
-        metrics = {'undemultiplexed_barcodes': []}
-        for metrics_file in glob.glob(metrics_file_pattern):
-            self.log.debug("parsing {0}".format(metrics_file))
-            if not os.path.exists(metrics_file):
-                self.log.warn("No such file {0}".format(metrics_file))
-                continue
-
-            with open(metrics_file) as fh:
-                parser = MetricsParser()
-                in_handle = csv.DictReader(fh, dialect=csv.excel_tab)
-                data = parser.parse_undemultiplexed_barcode_metrics(in_handle)
-                for lane, items in data.items():
-                    for item in items:
-                        item['lane'] = lane
-                        metrics['undemultiplexed_barcodes'].append(item)
+        metric = 'undemultiplexed_barcodes'
+        metrics = {metric: []}
+        with open(metrics_file) as fh:
+            parser = MetricsParser()
+            in_handle = csv.DictReader(fh, dialect=csv.excel_tab)
+            data = parser.parse_undemultiplexed_barcode_metrics(in_handle)
+            for lane, items in data.items():
+                for item in items:
+                    item['lane'] = lane
+                    metrics[metric].append(item)
 
         # Define a function for sorting values according to lane and yield
         def by_lane_yield(data):
             return '{0}-{1}'.format(data.get('lane',''),data.get('count','').zfill(10))
 
         # Remove duplicate entries resulting from multiple stats files
-        for metric in ['undemultiplexed_barcodes']:
-            dedupped = {}
-            for row in metrics[metric]:
-                key = "\t".join(row.values())
-                if key not in dedupped:
-                    dedupped[key] = row
-                else:
-                    self.log.warn("Duplicates of Undemultiplexed barcode entries discarded: {0}".format(key[0:min(35,len(key))]))
+        dedupped = {}
+        for row in metrics[metric]:
+            key = "\t".join(row.values())
+            if key not in dedupped:
+                dedupped[key] = row
+            else:
+                self.log.warn("Duplicates of Undemultiplexed barcode entries discarded: {0}".format(key[0:min(35,len(key))]))
 
-            # Reformat the structure of the data to fit the downstream processing
-            lanes = {}
-            for row in sorted(dedupped.values(), key=by_lane_yield, reverse=True):
-                lane = row['lane']
-                if lane not in lanes:
-                    lanes[lane] = {metric: dict([(k,[]) for k in row.keys()])}
-                for k in row.keys():
-                    lanes[lane][metric][k].append(row[k])
+        # Reformat the structure of the data to fit the downstream processing
+        lanes = {}
+        for row in sorted(dedupped.values(), key=by_lane_yield, reverse=True):
+            lane = row['lane']
+            if lane not in lanes:
+                lanes[lane] = {metric: dict([(k,[]) for k in row.keys()])}
+            for k in row.keys():
+                lanes[lane][metric][k].append(row[k])
 
         return lanes
 
-    def parse_demultiplex_stats_htm(self, fc_name, **kw):
-        """Parse the Unaligned*/Basecall_Stats_*/Demultiplex_Stats.htm file
+    def parse_demultiplex_stats_htm(self, htm_file, **kw):
+        """Parse the Demultiplex_Stats.htm file
         generated from CASAVA demultiplexing and returns barcode metrics.
         """
-        metrics = {"Barcode_lane_statistics": [],
-                   "Sample_information": []}
-        # Use a glob to allow for multiple fastq directories
-        print fc_name[1:]
-        print "Basecall_Stats_*{0}".format(fc_name[1:])
-        htm_file_pattern = os.path.join(self.path, "Unaligned*", "Basecall_Stats_*{0}".format(fc_name[1:]), "Demultiplex_Stats.htm")
-        for htm_file in glob.glob(htm_file_pattern):
-            self.log.debug("parsing {0}".format(htm_file))
-            if not os.path.exists(htm_file):
-                self.log.warn("No such file {0}".format(htm_file))
-                continue
-            with open(htm_file) as fh:
-                htm_doc = fh.read()
-            soup = BeautifulSoup(htm_doc)
-            ##
-            ## Find headers
-            allrows = soup.findAll("tr")
-            column_gen=(row.findAll("th") for row in allrows)
-            parse_row = lambda row: row
-            headers = [h for h in map(parse_row, column_gen) if h]
-            bc_header = [str(x.string) for x in headers[0]]
-            smp_header = [str(x.string) for x in headers[1]]
-            ## 'Known' headers from a Demultiplex_Stats.htm document
-            bc_header_known = ['Lane', 'Sample ID', 'Sample Ref', 'Index', 
-                    'Description', 'Control', 'Project', 'Yield (Mbases)', 
-                    '% PF', '# Reads', '% of raw clusters per lane', 
-                    '% Perfect Index Reads', '% One Mismatch Reads (Index)', 
-                    '% of >= Q30 Bases (PF)', 'Mean Quality Score (PF)']
-            smp_header_known = ['None', 'Recipe', 'Operator', 'Directory']
-            if not bc_header == bc_header_known:
-                self.log.warn("Barcode lane statistics header information has"
-                        " changed. New format?\nOld format: {0}\nSaw: {1}".format(
-                        ",".join((["'{0}'".format(x) for x in bc_header_known])),
-                        ",".join(["'{0}'".format(x) for x in bc_header])))
-            if not smp_header == smp_header_known:
-                self.log.warn("Sample header information has changed. New "
-                        "format?\nOld format: {0}\nSaw: {1}".format(
-                        ",".join((["'{0}'".format(x) for x in smp_header_known])),
-                        ",".join(["'{0}'".format(x) for x in smp_header])))
-            ## Fix first header name in smp_header since htm document is mal-formatted: <th>Sample<p></p>ID</th>
-            smp_header[0] = "Sample ID"
+        self.log.debug("parsing {0}".format(htm_file))
+        with open(htm_file) as fh:
+            htm_doc = fh.read()
+        soup = BeautifulSoup(htm_doc)
+        ##
+        ## Find headers
+        allrows = soup.findAll("tr")
+        column_gen=(row.findAll("th") for row in allrows)
+        parse_row = lambda row: row
+        headers = [h for h in map(parse_row, column_gen) if h]
+        bc_header = [str(x.string) for x in headers[0]]
+        smp_header = [str(x.string) for x in headers[1]]
+        ## 'Known' headers from a Demultiplex_Stats.htm document
+        bc_header_known = ['Lane', 'Sample ID', 'Sample Ref', 'Index', 
+                'Description', 'Control', 'Project', 'Yield (Mbases)', 
+                '% PF', '# Reads', '% of raw clusters per lane', 
+                '% Perfect Index Reads', '% One Mismatch Reads (Index)', 
+                '% of >= Q30 Bases (PF)', 'Mean Quality Score (PF)']
+        smp_header_known = ['None', 'Recipe', 'Operator', 'Directory']
+        if not bc_header == bc_header_known:
+            self.log.warn("Barcode lane statistics header information has"
+                    " changed. New format?\nOld format: {0}\nSaw: {1}".format(
+                    ",".join((["'{0}'".format(x) for x in bc_header_known])),
+                    ",".join(["'{0}'".format(x) for x in bc_header])))
+        if not smp_header == smp_header_known:
+            self.log.warn("Sample header information has changed. New "
+                    "format?\nOld format: {0}\nSaw: {1}".format(
+                    ",".join((["'{0}'".format(x) for x in smp_header_known])),
+                    ",".join(["'{0}'".format(x) for x in smp_header])))
+        ## Fix first header name in smp_header since htm document is mal-formatted: <th>Sample<p></p>ID</th>
+        smp_header[0] = "Sample ID"
 
-            ## Parse Barcode lane statistics
-            soup = BeautifulSoup(htm_doc)
-            table = soup.findAll("table")[1]
-            rows = table.findAll("tr")
-            column_gen = (row.findAll("td") for row in rows)
-            parse_row = lambda row: dict([(bc_header[i],str(row[i].string)) for i in range(0, len(bc_header)) if row])
-            metrics["Barcode_lane_statistics"].extend(map(parse_row, column_gen))
+        ## Parse Barcode lane statistics
+        soup = BeautifulSoup(htm_doc)
+        table = soup.findAll("table")[1]
+        rows = table.findAll("tr")
+        column_gen = (row.findAll("td") for row in rows)
+        parse_row = lambda row: dict([(bc_header[i],str(row[i].string)) for i in range(0, len(bc_header)) if row])
+        metrics["Barcode_lane_statistics"].extend(map(parse_row, column_gen))
 
-            ## Parse Sample information
-            soup = BeautifulSoup(htm_doc)
-            table = soup.findAll("table")[3]
-            rows = table.findAll("tr")
-            column_gen = (row.findAll("td") for row in rows)
-            parse_row = lambda row: dict([(smp_header[i],str(row[i].string)) for i in range(0, len(smp_header)) if row])
-            metrics["Sample_information"].extend(map(parse_row, column_gen))
+        ## Parse Sample information
+        soup = BeautifulSoup(htm_doc)
+        table = soup.findAll("table")[3]
+        rows = table.findAll("tr")
+        column_gen = (row.findAll("td") for row in rows)
+        parse_row = lambda row: dict([(smp_header[i],str(row[i].string)) for i in range(0, len(smp_header)) if row])
+        metrics["Sample_information"].extend(map(parse_row, column_gen))
 
         # Define a function for sorting the values
         def by_lane_sample(data):
