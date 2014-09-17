@@ -89,6 +89,7 @@ class FlowcellRunMetricsParser():
     """Flowcell level class for parsing flowcell run metrics data."""
     def __init__(self):
         self.log = LOG
+        self.flowcell = None
 
     def parse_undemultiplexed_barcode_metrics(self, metrics_file, **kw):
         """Parse the undetermined indices top barcodes materics
@@ -139,6 +140,11 @@ class FlowcellRunMetricsParser():
         soup = BeautifulSoup(htm_doc)
         ##
         ## Find headers
+        flowcell_header = soup.find("h1")
+        if flowcell_header:
+            split_string = flowcell_header.string.split(' ')
+            if len(split_string) == 2 and split_string[0] == 'Flowcell:':
+                self.flowcell = split_string[1]
         allrows = soup.findAll("tr")
         column_gen=(row.findAll("th") for row in allrows)
         parse_row = lambda row: row
