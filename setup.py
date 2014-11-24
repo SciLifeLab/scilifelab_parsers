@@ -1,11 +1,16 @@
 from setuptools import setup, find_packages
-import sys
-import os
-import glob
+
+try:
+    with open("requirements.txt", "r") as f:
+        install_requires = [x.strip() for x in f.readlines()]
+except IOError:
+    install_requires = []
 
 setup(name = "scilifelab_parsers",
     version = "1.0",
     author = "Maya Brandi",
     author_email = "maya.brandi@scilifelab.se",
     description = "Package for scilife parser modules",
-    py_modules = ['qc_parsers'])
+    install_requires = install_requires,
+    packages = find_packages()
+    )
