@@ -162,8 +162,3 @@ class FlowcellRunMetricsParser():
         return metrics
 
 
-#html= open('laneBarcode.html','r')
-#l=html_tables_to_dicts(html)
-
-#html= open('Demultiplex_Stats.htm','r')
-#D=html_tables_to_dicts(html)
