@@ -133,11 +133,9 @@ class FlowcellRunMetricsParser():
         metrics = self._html_tables_to_lists_of_tuples(html_file)    
         new_metrics = {}
         for header, table in metrics.items():
-            print header
             new_metrics[header] = []
             for sample in table:
                 new_metrics[header].append(dict(sample))
-        print new_metrics
         return new_metrics
 
     def _html_tables_to_lists_of_tuples(self, html):
