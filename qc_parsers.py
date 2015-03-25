@@ -129,78 +129,38 @@ class FlowcellRunMetricsParser():
 
         return lanes
 
-    def parse_demultiplex_stats_htm(self, htm_file, **kw):
-        """Parse the Demultiplex_Stats.htm file
-        generated from CASAVA demultiplexing and returns barcode metrics.
-        """
-        metrics = {"Barcode_lane_statistics": [], "Sample_information": []}
-        self.log.debug("parsing {0}".format(htm_file))
-        with open(htm_file) as fh:
-            htm_doc = fh.read()
-        soup = BeautifulSoup(htm_doc)
-        ##
-        ## Find headers
-        flowcell_header = soup.find("h1")
-        if flowcell_header:
-            split_string = flowcell_header.string.split(' ')
-            if len(split_string) == 2 and split_string[0] == 'Flowcell:':
-                self.flowcell = split_string[1]
-        allrows = soup.findAll("tr")
-        column_gen=(row.findAll("th") for row in allrows)
-        parse_row = lambda row: row
-        headers = [h for h in map(parse_row, column_gen) if h]
-        bc_header = [str(x.string) for x in headers[0]]
-        smp_header = [str(x.string) for x in headers[1]]
-        ## 'Known' headers from a Demultiplex_Stats.htm document
-        bc_header_known = ['Lane', 'Sample ID', 'Sample Ref', 'Index', 
-                'Description', 'Control', 'Project', 'Yield (Mbases)', 
-                '% PF', '# Reads', '% of raw clusters per lane', 
-                '% Perfect Index Reads', '% One Mismatch Reads (Index)', 
-                '% of >= Q30 Bases (PF)', 'Mean Quality Score (PF)']
-        smp_header_known = ['None', 'Recipe', 'Operator', 'Directory']
-        if not bc_header == bc_header_known:
-            self.log.warn("Barcode lane statistics header information has"
-                    " changed. New format?\nOld format: {0}\nSaw: {1}".format(
-                    ",".join((["'{0}'".format(x) for x in bc_header_known])),
-                    ",".join(["'{0}'".format(x) for x in bc_header])))
-        if not smp_header == smp_header_known:
-            self.log.warn("Sample header information has changed. New "
-                    "format?\nOld format: {0}\nSaw: {1}".format(
-                    ",".join((["'{0}'".format(x) for x in smp_header_known])),
-                    ",".join(["'{0}'".format(x) for x in smp_header])))
-        ## Fix first header name in smp_header since htm document is mal-formatted: <th>Sample<p></p>ID</th>
-        smp_header[0] = "Sample ID"
+    def parse_demultiplex_stats_htm(self, html_file):
+        metrics = self._html_tables_to_lists_of_tuples(html_file)    
+        new_metrics = {}
+        for header, table in metrics.items():
+            new_metrics[header] = []
+            for sample in table:
+                new_metrics[header].append(dict(sample))
+        return new_metrics
 
-        ## Parse Barcode lane statistics
-        soup = BeautifulSoup(htm_doc)
-        table = soup.findAll("table")[1]
-        rows = table.findAll("tr")
-        column_gen = (row.findAll("td") for row in rows)
-        parse_row = lambda row: dict([(bc_header[i],str(row[i].string)) for i in range(0, len(bc_header)) if row])
-        metrics["Barcode_lane_statistics"].extend(map(parse_row, column_gen))
+    def _html_tables_to_lists_of_tuples(self, html):
+        bs = BeautifulSoup(html)
+        metrics = {}
+        keys = []
+        header = None
+        for table in bs.findAll('table'):
+            header = table.findPrevious('h2')
+            if header:
+                header = header.text.replace(' ','_')
+            if header not in metrics.keys():
+                metrics[header] = []
+            if not metrics[header]: 
+                for row in table.findChildren('tr'):
+                    if row.findChildren('th'):
+                        keys = map(lambda v: v.text, row.findChildren('th')) 
+                    values = map(lambda v: v.text, row.findChildren('td'))
+                    if len(values)==len(keys):
+                        metrics[header].append(zip(keys, values))
+    return metrics
 
-        ## Parse Sample information
-        soup = BeautifulSoup(htm_doc)
-        table = soup.findAll("table")[3]
-        rows = table.findAll("tr")
-        column_gen = (row.findAll("td") for row in rows)
-        parse_row = lambda row: dict([(smp_header[i],str(row[i].string)) for i in range(0, len(smp_header)) if row])
-        metrics["Sample_information"].extend(map(parse_row, column_gen))
 
-        # Define a function for sorting the values
-        def by_lane_sample(data):
-            return "{0}-{1}-{2}".format(data.get('Lane',''),data.get('Sample ID',''),data.get('Index',''))
+#html= open('laneBarcode.html','r')
+#l=html_tables_to_dicts(html)
 
-        # Post-process the metrics data to eliminate duplicates resulting from multiple stats files
-        for metric in ['Barcode_lane_statistics', 'Sample_information']:
-            dedupped = {}
-            for row in metrics[metric]:
-                key = "\t".join(row.values())
-                if key not in dedupped:
-                    dedupped[key] = row
-                else:
-                    self.log.debug("Duplicates of Demultiplex Stats entries discarded: {0}".format(key[0:min(35,len(key))]))
-            metrics[metric] = sorted(dedupped.values(), key=by_lane_sample)
-
-        ## Set data
-        return metrics
+#html= open('Demultiplex_Stats.htm','r')
+#D=html_tables_to_dicts(html)
