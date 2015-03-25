@@ -141,6 +141,7 @@ class FlowcellRunMetricsParser():
         return new_metrics
 
     def _html_tables_to_lists_of_tuples(self, html):
+        html = open(html,'r')
         bs = BeautifulSoup(html)
         metrics = {}
         keys = []
