@@ -156,7 +156,7 @@ class FlowcellRunMetricsParser():
                     values = map(lambda v: v.text, row.findChildren('td'))
                     if len(values)==len(keys):
                         metrics[header].append(zip(keys, values))
-    return metrics
+        return metrics
 
 
 #html= open('laneBarcode.html','r')
