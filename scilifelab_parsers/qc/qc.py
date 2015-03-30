@@ -150,13 +150,19 @@ class FlowcellRunMetricsParser():
                 header = header.text.replace(' ','_')
             if header not in metrics.keys():
                 metrics[header] = []
-            if not metrics[header]: 
-                for row in table.findChildren('tr'):
+            if not metrics[header]: # Dont overwrite table list if its already set
+                for row in table.findChildren('tr'): # Table --> list of dicts 
                     if row.findChildren('th'):
-                        keys = map(lambda v: v.text, row.findChildren('th')) 
-                    values = map(lambda v: v.text, row.findChildren('td'))
+                        keys = map(lambda v: v.text, row.findChildren('th')) # table headers --> keys 
+                    values = map(lambda v: v.text, row.findChildren('td')) # table rows --> values
                     if len(values)==len(keys):
                         metrics[header].append(zip(keys, values))
         return metrics
+
+    def parse_laneBarcode_html(self, html_file):
+        metrics = self._html_tables_to_lists_of_tuples(html_file)
+        new_metrics = {}
+
+
 
 
